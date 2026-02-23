@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace BookingSystem.API.Controllers;
 
 [ApiController]
-[Route("api/staff/{staffId:guid}/working-hours")]
+[Route("api/tenants/{tenantId}/staff/{staffId:guid}/working-hours")]
 public sealed class StaffWorkingHoursController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -29,9 +29,9 @@ public sealed class StaffWorkingHoursController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateDay(Guid tenantId, Guid staffId, [FromBody] CreateStaffWorkingHoursDayDto body, CancellationToken ct)
     {
-        var id = await _mediator.Send(new CreateStaffWorkingHoursDayCommand(tenantId, staffId, body), ct);
-        return Created($"/api/tenants/{tenantId}/staff/{staffId}/working-hours/{id}", new { id });
-    }
+        var result = await _mediator.Send(new CreateStaffWorkingHoursDayCommand(tenantId, staffId, body), ct);
+        return Created($"/api/tenants/{tenantId}/staff/{staffId}/working-hours/{result.DayOfWeek}", result);
+    } 
 
     [HttpDelete("{dayOfWeek:int}")]
     public async Task<IActionResult> DeleteDay(Guid tenantId, Guid staffId, int dayOfWeek, CancellationToken ct)

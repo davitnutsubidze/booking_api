@@ -16,6 +16,7 @@ public sealed class GetStaffWorkingHoursHandler
         var items = await _repo.GetStaffWeekAsync(request.StaffId, ct);
 
         return items.Select(x => new StaffWorkingHoursDayDto(
+            x.StaffId,
             (int)x.DayOfWeek,
             x.StartTime.ToString("HH:mm"),
             x.EndTime.ToString("HH:mm"),

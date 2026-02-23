@@ -1,4 +1,5 @@
 ﻿using BookingSystem.Application.Common.Exceptions;
+using BookingSystem.Application.DTOs.WorkingHours;
 using BookingSystem.Application.Interfaces;
 using BookingSystem.Domain.Entities;
 using MediatR;
@@ -7,7 +8,7 @@ using System.Globalization;
 namespace BookingSystem.Application.Features.WorkingHours.Staff.Commands.CreateStaffWorkingHoursDay;
 
 public sealed class CreateStaffWorkingHoursDayHandler
-    : IRequestHandler<CreateStaffWorkingHoursDayCommand, Guid>
+    : IRequestHandler<CreateStaffWorkingHoursDayCommand, StaffWorkingHoursDayDto>
 {
     private readonly IStaffRepository _staffRepo;
     private readonly IStaffWorkingHoursRepository _repo;
@@ -23,7 +24,7 @@ public sealed class CreateStaffWorkingHoursDayHandler
         _uow = uow;
     }
 
-    public async Task<Guid> Handle(CreateStaffWorkingHoursDayCommand request, CancellationToken ct)
+    public async Task<StaffWorkingHoursDayDto> Handle(CreateStaffWorkingHoursDayCommand request, CancellationToken ct)
     {
         var staff = await _staffRepo.GetByIdAsync(request.StaffId, ct)
             ?? throw new NotFoundException("Staff not found.");
@@ -64,6 +65,6 @@ public sealed class CreateStaffWorkingHoursDayHandler
             throw new ConflictException("Working hours for this day already exist.");
         }
 
-        return entity.Id;
+        return new StaffWorkingHoursDayDto(entity.StaffId, (int) entity.DayOfWeek,  entity.StartTime.ToString("HH:mm"), entity.EndTime.ToString("HH:mm"), entity.IsDayOff);
     }
 }

@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".gitignore" />
+  </Folder>
   <Project Path="Booking.Domain/BookingSystem.Domain.csproj" Id="01683384-87af-46ef-bf88-12d2e6009e41" />
   <Project Path="BookingSystem.API/BookingSystem.API.csproj" Id="3693824c-94db-48a6-8fab-40bf25e0210f" />
   <Project Path="BookingSystem.Application/BookingSystem.Application.csproj" Id="c5cd4565-aeda-481b-a9f9-0618190fd2aa" />

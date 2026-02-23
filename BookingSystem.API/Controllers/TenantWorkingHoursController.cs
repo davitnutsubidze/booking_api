@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace BookingSystem.API.Controllers;
 
 [ApiController]
-[Route("api/Tenants/{tenantId:guid}/working-hours")]
+[Route("api/tenants/{tenantId:guid}/working-hours")]
 public sealed class TenantWorkingHoursController : ControllerBase
 {
     private readonly IMediator _mediator;

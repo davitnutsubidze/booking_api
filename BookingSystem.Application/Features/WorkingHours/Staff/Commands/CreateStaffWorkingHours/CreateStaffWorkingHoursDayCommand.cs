@@ -7,4 +7,4 @@ public sealed record CreateStaffWorkingHoursDayCommand(
     Guid TenantId,
     Guid StaffId,
     CreateStaffWorkingHoursDayDto Body
-) : IRequest<Guid>;
+) : IRequest<StaffWorkingHoursDayDto>;
