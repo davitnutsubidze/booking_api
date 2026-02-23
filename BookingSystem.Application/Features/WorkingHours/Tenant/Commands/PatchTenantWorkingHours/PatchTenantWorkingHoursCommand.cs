@@ -1,4 +1,4 @@
-﻿using BookingSystem.Application.DTOs.WorkingHours;
+﻿using BookingSystem.Application.DTO.WorkingHours.Tenant;
 using MediatR;
 
 namespace BookingSystem.Application.Features.WorkingHours.Tenant.Commands.PatchTenantWorkingHours;

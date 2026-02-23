@@ -1,9 +1,10 @@
-﻿using BookingSystem.Application.DTOs.WorkingHours;
+﻿using BookingSystem.Application.DTO.WorkingHours.Staff;
 using BookingSystem.Application.Features.WorkingHours.Staff.Commands.CreateStaffWorkingHoursDay;
 using BookingSystem.Application.Features.WorkingHours.Staff.Commands.DeleteStaffWorkingHoursDay;
 using BookingSystem.Application.Features.WorkingHours.Staff.Commands.setStaffWorkingHours;
 using BookingSystem.Application.Features.WorkingHours.Staff.Queries.GetStaffWorkingHours;
 using MediatR;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BookingSystem.API.Controllers;
@@ -16,14 +17,18 @@ public sealed class StaffWorkingHoursController : ControllerBase
     public StaffWorkingHoursController(IMediator mediator) => _mediator = mediator;
 
     [HttpGet]
-    public async Task<ActionResult<List<StaffWorkingHoursDayDto>>> Get(Guid staffId, CancellationToken ct)
+    public async Task<ActionResult<List<PatchWorkingHoursDayDto>>> Get(Guid staffId, CancellationToken ct)
         => Ok(await _mediator.Send(new GetStaffWorkingHoursQuery(staffId), ct));
 
-    [HttpPut]
-    public async Task<IActionResult> Put(Guid staffId, [FromBody] List<StaffWorkingHoursDayDto> days, CancellationToken ct)
+    [HttpPatch("{dayOfWeek:int}")]
+    public async Task<ActionResult<PatchWorkingHoursDayDto>> Patch(
+        Guid staffId,
+        int dayOfWeek, 
+        [FromBody] PatchWorkingHoursDayDto body, 
+        CancellationToken ct)
     {
-        await _mediator.Send(new SetStaffWorkingHoursCommand(staffId, days), ct);
-        return NoContent();
+        var result = await _mediator.Send(new PatchStaffWorkingHoursCommand(staffId, dayOfWeek, body), ct);
+        return Ok(result);
     }
 
     [HttpPost]

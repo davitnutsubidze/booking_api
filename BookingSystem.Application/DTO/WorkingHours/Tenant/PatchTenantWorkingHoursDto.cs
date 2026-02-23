@@ -1,4 +1,4 @@
-﻿namespace BookingSystem.Application.DTOs.WorkingHours;
+﻿namespace BookingSystem.Application.DTO.WorkingHours.Tenant;
 
 public sealed record PatchTenantWorkingHoursDto(
     string? StartTime,   // "HH:mm"

@@ -1,6 +1,6 @@
-﻿namespace BookingSystem.Application.DTOs.WorkingHours;
+﻿namespace BookingSystem.Application.DTO.WorkingHours.Tenant;
 
-public sealed record WorkingHoursDayDto(
+public sealed record TenantWorkingHoursDayDto(
     int DayOfWeek,          // 0..6 (Sunday=0)
     string StartTime,       // "09:00"
     string EndTime,         // "18:00"

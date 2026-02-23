@@ -1,9 +1,9 @@
-﻿using BookingSystem.Application.DTOs.WorkingHours;
+﻿using BookingSystem.Application.DTO.WorkingHours.Tenant;
 using MediatR;
 
 namespace BookingSystem.Application.Features.WorkingHours.Tenant.Commands.SetTenantWorkingHours;
 
 public sealed record SetTenantWorkingHoursCommand(
     Guid TenantId,
-    List<WorkingHoursDayDto> Days
+    List<TenantWorkingHoursDayDto> Days
 ) : IRequest;

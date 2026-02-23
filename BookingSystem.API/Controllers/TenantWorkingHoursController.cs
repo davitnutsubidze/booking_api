@@ -1,4 +1,4 @@
-﻿using BookingSystem.Application.DTOs.WorkingHours;
+﻿using BookingSystem.Application.DTO.WorkingHours.Tenant;
 using BookingSystem.Application.Features.WorkingHours.Tenant.Commands.PatchTenantWorkingHours;
 using BookingSystem.Application.Features.WorkingHours.Tenant.Commands.SetTenantWorkingHours;
 using BookingSystem.Application.Features.WorkingHours.Tenant.Queries.GetTenantWorkingHours;
@@ -15,11 +15,11 @@ public sealed class TenantWorkingHoursController : ControllerBase
     public TenantWorkingHoursController(IMediator mediator) => _mediator = mediator;
 
     [HttpGet]
-    public async Task<ActionResult<List<WorkingHoursDayDto>>> Get(Guid tenantId, CancellationToken ct)
+    public async Task<ActionResult<List<TenantWorkingHoursDayDto>>> Get(Guid tenantId, CancellationToken ct)
         => Ok(await _mediator.Send(new GetTenantWorkingHoursQuery(tenantId), ct));
 
     [HttpPut]
-    public async Task<IActionResult> Put(Guid tenantId, [FromBody] List<WorkingHoursDayDto> days, CancellationToken ct)
+    public async Task<IActionResult> Put(Guid tenantId, [FromBody] List<TenantWorkingHoursDayDto> days, CancellationToken ct)
     {
         await _mediator.Send(new SetTenantWorkingHoursCommand(tenantId, days), ct);
         return NoContent();

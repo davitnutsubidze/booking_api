@@ -1,4 +1,4 @@
-﻿namespace BookingSystem.Application.DTOs.WorkingHours;
+﻿namespace BookingSystem.Application.DTO.WorkingHours.Staff;
 
 public sealed record CreateStaffWorkingHoursDayDto(
     int DayOfWeek,
