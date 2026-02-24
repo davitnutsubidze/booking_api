@@ -12,18 +12,21 @@ public sealed class GetAvailabilityV2Handler
     private readonly IServiceRepository _services;
     private readonly IWorkingHoursRepository _hours;
     private readonly IBlockedTimeRepository _blocked;
-    private readonly IAppointmentRepository _appointments;
+    private readonly IAppointmentRepository _appointments; 
+    private readonly IStaffLunchBreakRepository _lunch;
 
     public GetAvailabilityV2Handler(
         IServiceRepository services,
         IWorkingHoursRepository hours,
         IBlockedTimeRepository blocked,
-        IAppointmentRepository appointments)
+        IAppointmentRepository appointments,
+        IStaffLunchBreakRepository lunch)
     {
         _services = services;
         _hours = hours;
         _blocked = blocked;
         _appointments = appointments;
+        _lunch = lunch;
     }
 
     public async Task<AvailabilityResponseDto> Handle(GetAvailabilityV2Query request, CancellationToken ct)
@@ -84,6 +87,27 @@ public sealed class GetAvailabilityV2Handler
 
         // IMPORTANT: adjust these property names if your BlockedTime uses StartDateTime/EndDateTime
         busyIntervals.AddRange(blocked.Select(b => (b.StartDateTimeUtc, b.EndDateTimeUtc)));
+
+
+        // 2.1) Staff lunch break for that day (weekly recurring)
+        var lunch = await _lunch.GetByStaffAndDayAsync(request.StaffId, day, ct);
+
+        if (lunch is not null && lunch.IsEnabled)
+        {
+            // DateOnly + TimeOnly -> DateTime (UTC)
+            var lunchStartUtc = request.DateUtc.ToDateTime(lunch.StartTime, DateTimeKind.Utc);
+            var lunchEndUtc = request.DateUtc.ToDateTime(lunch.EndTime, DateTimeKind.Utc);
+
+            if (lunchEndUtc > lunchStartUtc)
+            {
+                // Clip lunch to working window (so it doesn't block outside work hours)
+                var clippedStart = lunchStartUtc < workStartUtc ? workStartUtc : lunchStartUtc;
+                var clippedEnd = lunchEndUtc > workEndUtc ? workEndUtc : lunchEndUtc;
+
+                if (clippedEnd > clippedStart)
+                    busyIntervals.Add((clippedStart, clippedEnd));
+            }
+        }
 
         // 3) Generate candidate slots, skip if overlaps any busy interval
         var slots = new List<AvailabilitySlotDto>();

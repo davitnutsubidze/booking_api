@@ -7,13 +7,16 @@ namespace BookingSystem.Application.Features.BlockedTimes.Commands.CreateBlocked
 
 public sealed class CreateBlockedTimeHandler : IRequestHandler<CreateBlockedTimeCommand, BlockedTimeDto>
 {
+    
     private readonly IBlockedTimeCrudRepository _repo;
+    private readonly IStaffRepository _staff;
     private readonly IUnitOfWork _uow;
 
-    public CreateBlockedTimeHandler(IBlockedTimeCrudRepository repo, IUnitOfWork uow)
+    public CreateBlockedTimeHandler(IBlockedTimeCrudRepository repo, IUnitOfWork uow, IStaffRepository staff)
     {
         _repo = repo;
         _uow = uow;
+        _staff = staff;
     }
 
     public async Task<BlockedTimeDto> Handle(CreateBlockedTimeCommand request, CancellationToken ct)
@@ -31,10 +34,17 @@ public sealed class CreateBlockedTimeHandler : IRequestHandler<CreateBlockedTime
         await _repo.AddAsync(entity, ct);
         await _uow.SaveChangesAsync(ct);
 
+        string? staffName = null;
+        if (entity.StaffId is not null)
+        {
+            staffName = await _staff.GetStaffNameAsync(entity.TenantId, entity.StaffId.Value, ct);
+        }
+
         return new BlockedTimeDto(
             entity.Id,
             entity.TenantId,
             entity.StaffId,
+            staffName,
             entity.StartDateTimeUtc,
             entity.EndDateTimeUtc,
             entity.Reason

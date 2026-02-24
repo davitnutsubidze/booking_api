@@ -14,6 +14,7 @@ public class AppDbContext : DbContext
     public DbSet<Payment> Payment => Set<Payment>();
     public DbSet<Service> Services => Set<Service>();
     public DbSet<Staff> Staff => Set<Staff>();
+    public DbSet<StaffLunchBreak> StaffLunchBreaks => Set<StaffLunchBreak>();
     public DbSet<User> User => Set<User>();
     public DbSet<TenantWorkingHours> TenantWorkingHours => Set<TenantWorkingHours>();
     public DbSet<StaffWorkingHours> StaffWorkingHours => Set<StaffWorkingHours>();

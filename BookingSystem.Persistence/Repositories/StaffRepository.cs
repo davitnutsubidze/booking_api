@@ -16,6 +16,15 @@ public sealed class StaffRepository : IStaffRepository
             .OrderBy(s => s.LastName).ThenBy(s => s.FirstName)
             .ToListAsync(ct);
 
+    public Task<string?> GetStaffNameAsync(Guid tenantId, Guid staffId, CancellationToken ct = default)
+    {
+        return _db.Staff
+            .AsNoTracking()
+            .Where(s => s.TenantId == tenantId && s.Id == staffId)
+            .Select(s => s.FirstName + " " + s.LastName)
+            .FirstOrDefaultAsync(ct);
+    }
+
     public Task<Staff?> GetByIdAsync(Guid id, CancellationToken ct = default)
         => _db.Staff.FirstOrDefaultAsync(s => s.Id == id, ct);
 

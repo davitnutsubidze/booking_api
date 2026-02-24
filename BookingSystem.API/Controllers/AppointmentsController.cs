@@ -48,23 +48,6 @@ public sealed class AppointmentsController : ControllerBase
         return NoContent();
     }
 
-
-    [HttpGet("v2")]
-    public async Task<IActionResult> GetV2(
-    [FromQuery] Guid tenantId,
-    [FromQuery] Guid staffId,
-    [FromQuery] Guid serviceId,
-    [FromQuery] DateOnly dateUtc,
-    [FromQuery] int slotMinutes = 15,
-    CancellationToken ct = default)
-    {
-        var result = await _mediator.Send(
-            new GetAvailabilityV2Query(tenantId, staffId, serviceId, dateUtc, slotMinutes),
-            ct);
-
-        return Ok(result);
-    }
-
 }
 
 public sealed record UpdateAppointmentStatusRequest(Booking.Domain.Enums.AppointmentStatus Status);

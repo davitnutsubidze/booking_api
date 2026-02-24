@@ -12,14 +12,15 @@ public sealed class GetBlockedTimesHandler : IRequestHandler<GetBlockedTimesQuer
 
     public async Task<List<BlockedTimeDto>> Handle(GetBlockedTimesQuery request, CancellationToken ct)
     {
-        var items = await _repo.GetRangeAsync(request.TenantId, request.StaffId, request.FromUtc, request.ToUtc, ct);
+        var items = await _repo.GetRangeWithStaffNameAsync(request.TenantId, request.StaffId, request.FromUtc, request.ToUtc, ct);
 
         return items.Select(x => new BlockedTimeDto(
             x.Id,
             x.TenantId, // tenant id
             x.StaffId,
-            x.StartDateTimeUtc,
-            x.EndDateTimeUtc,
+            x.StaffName,
+            x.StartUtc,
+            x.EndUtc,
             x.Reason
         )).ToList();
     }
