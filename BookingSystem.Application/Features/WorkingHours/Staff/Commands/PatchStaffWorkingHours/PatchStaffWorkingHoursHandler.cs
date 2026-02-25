@@ -44,8 +44,8 @@ public sealed class PatchStaffWorkingHoursHandler : IRequestHandler<PatchStaffWo
         return new StaffWorkingHoursDayDto(
             entity.StaffId,
             (int)entity.DayOfWeek, 
-            entity.StartTime.ToString("HH:mm:ss"), 
-            entity.EndTime.ToString("HH:mm:ss"), 
+            entity.StartTime.ToString("HH:mm"), 
+            entity.EndTime.ToString("HH:mm"), 
             entity.IsDayOff);
     }
 

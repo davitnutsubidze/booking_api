@@ -32,7 +32,7 @@ public sealed class TenantWorkingHoursController : ControllerBase
         [FromBody] PatchTenantWorkingHoursDto body,
         CancellationToken ct)
     {
-        await _mediator.Send(new PatchTenantWorkingHoursCommand(tenantId, dayOfWeek, body), ct);
-        return NoContent();
+        var result = await _mediator.Send(new PatchTenantWorkingHoursCommand(tenantId, dayOfWeek, body), ct);
+        return Ok(result);
     }
 }

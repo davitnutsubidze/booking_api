@@ -14,19 +14,22 @@ public sealed class GetAvailabilityV2Handler
     private readonly IBlockedTimeRepository _blocked;
     private readonly IAppointmentRepository _appointments; 
     private readonly IStaffLunchBreakRepository _lunch;
+    private readonly IStaffRepository _staff;
 
     public GetAvailabilityV2Handler(
         IServiceRepository services,
         IWorkingHoursRepository hours,
         IBlockedTimeRepository blocked,
         IAppointmentRepository appointments,
-        IStaffLunchBreakRepository lunch)
+        IStaffLunchBreakRepository lunch,
+        IStaffRepository staff)
     {
         _services = services;
         _hours = hours;
         _blocked = blocked;
         _appointments = appointments;
         _lunch = lunch;
+        _staff = staff;
     }
 
     public async Task<AvailabilityResponseDto> Handle(GetAvailabilityV2Query request, CancellationToken ct)
@@ -37,8 +40,15 @@ public sealed class GetAvailabilityV2Handler
         var service = await _services.GetByIdAsync(request.ServiceId, ct)
             ?? throw new NotFoundException("Service not found.");
 
+        //  Staff check (exists + tenant + active)
+        var staff = await _staff.GetByIdAsync(request.StaffId, ct)
+            ?? throw new NotFoundException("Staff not found.");
+
         if (service.TenantId != request.TenantId)
             throw new ConflictException("Service does not belong to this tenant.");
+
+        if (!staff.IsActive)
+            return new AvailabilityResponseDto(request.DateUtc, request.SlotMinutes, service.DurationMinutes, new());
 
         var durationMinutes = service.DurationMinutes;
 
@@ -59,13 +69,18 @@ public sealed class GetAvailabilityV2Handler
             if (businessHours is null || businessHours.IsClosed)
                 return new AvailabilityResponseDto(request.DateUtc, request.SlotMinutes, durationMinutes, new());
         }
+        
 
         var startTime = staffHours?.StartTime ?? businessHours!.StartTime;
         var endTime = staffHours?.EndTime ?? businessHours!.EndTime;
 
-        // convert DateOnly + TimeOnly -> DateTime UTC
-        var workStartUtc = request.DateUtc.ToDateTime(startTime, DateTimeKind.Utc);
-        var workEndUtc = request.DateUtc.ToDateTime(endTime, DateTimeKind.Utc);
+        // convert DateOnly + TimeOnly (local Time) -> convert local time to DateTime UTC  -> 
+        var tz = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tbilisi");
+        var workStartLocal = request.DateUtc.ToDateTime(startTime, DateTimeKind.Unspecified);
+        var workEndLocal = request.DateUtc.ToDateTime(endTime, DateTimeKind.Unspecified);
+
+        var workStartUtc = TimeZoneInfo.ConvertTimeToUtc(workStartLocal, tz);
+        var workEndUtc = TimeZoneInfo.ConvertTimeToUtc(workEndLocal, tz);
 
         if (workEndUtc <= workStartUtc)
             return new AvailabilityResponseDto(request.DateUtc, request.SlotMinutes, durationMinutes, new());
@@ -94,9 +109,12 @@ public sealed class GetAvailabilityV2Handler
 
         if (lunch is not null && lunch.IsEnabled)
         {
-            // DateOnly + TimeOnly -> DateTime (UTC)
-            var lunchStartUtc = request.DateUtc.ToDateTime(lunch.StartTime, DateTimeKind.Utc);
-            var lunchEndUtc = request.DateUtc.ToDateTime(lunch.EndTime, DateTimeKind.Utc);
+            // convert DateOnly + TimeOnly (local Time) -> convert local time to DateTime UTC  -> 
+            var lunchStartLocal = request.DateUtc.ToDateTime(lunch.StartTime, DateTimeKind.Unspecified);
+            var lunchEndLocal = request.DateUtc.ToDateTime(lunch.EndTime, DateTimeKind.Unspecified);
+
+            var lunchStartUtc = TimeZoneInfo.ConvertTimeToUtc(lunchStartLocal, tz);
+            var lunchEndUtc = TimeZoneInfo.ConvertTimeToUtc(lunchEndLocal, tz);
 
             if (lunchEndUtc > lunchStartUtc)
             {

@@ -1,11 +1,13 @@
 ﻿using BookingSystem.Application.Common.Exceptions;
+using BookingSystem.Application.DTO.WorkingHours.Tenant;
 using BookingSystem.Application.Interfaces;
+using BookingSystem.Domain.Entities;
 using MediatR;
 using System.Globalization;
 
 namespace BookingSystem.Application.Features.WorkingHours.Tenant.Commands.PatchTenantWorkingHours;
 
-public sealed class PatchTenantWorkingHoursHandler : IRequestHandler<PatchTenantWorkingHoursCommand>
+public sealed class PatchTenantWorkingHoursHandler : IRequestHandler<PatchTenantWorkingHoursCommand, TenantWorkingHoursDayDto>
 {
     private readonly IWorkingHoursCrudRepository _repo;
     private readonly IUnitOfWork _uow;
@@ -16,7 +18,7 @@ public sealed class PatchTenantWorkingHoursHandler : IRequestHandler<PatchTenant
         _uow = uow;
     }
 
-    public async Task Handle(PatchTenantWorkingHoursCommand request, CancellationToken ct)
+    public async Task<TenantWorkingHoursDayDto> Handle(PatchTenantWorkingHoursCommand request, CancellationToken ct)
     {
         var day = (DayOfWeek)request.DayOfWeek;
 
@@ -38,6 +40,7 @@ public sealed class PatchTenantWorkingHoursHandler : IRequestHandler<PatchTenant
             throw new ConflictException("EndTime must be after StartTime when day is open.");
 
         await _uow.SaveChangesAsync(ct);
+        return new TenantWorkingHoursDayDto((int) entity.DayOfWeek, entity.StartTime.ToString("HH:mm"), entity.EndTime.ToString("HH:mm"), entity.IsClosed);
     }
 
     private static TimeOnly ParseTime(string value)

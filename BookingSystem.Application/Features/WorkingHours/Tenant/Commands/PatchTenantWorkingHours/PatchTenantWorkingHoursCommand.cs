@@ -7,4 +7,4 @@ public sealed record PatchTenantWorkingHoursCommand(
     Guid TenantId,
     int DayOfWeek,
     PatchTenantWorkingHoursDto Body
-) : IRequest;
+) : IRequest<TenantWorkingHoursDayDto>;
