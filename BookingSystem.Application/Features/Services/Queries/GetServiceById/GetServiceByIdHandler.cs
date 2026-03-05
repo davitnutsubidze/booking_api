@@ -18,6 +18,6 @@ public sealed class GetServiceByIdHandler : IRequestHandler<GetServiceByIdQuery,
         if (s.TenantId != request.TenantId)
             throw new ConflictException("Service does not belong to this tenant.");
 
-        return new ServiceDto(s.Id, s.TenantId, s.Name, s.Description, s.DurationMinutes, s.Price, s.Currency, s.IsActive);
+        return new ServiceDto(s.Id, s.TenantId, s.Name, s.Description, s.DurationMinutes, s.Price, s.Currency, s.IsActive, s.StaffServices.Select(ss => ss.StaffId).Distinct().ToList());
     }
 }

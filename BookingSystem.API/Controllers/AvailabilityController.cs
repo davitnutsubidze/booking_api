@@ -1,5 +1,4 @@
-﻿using BookingSystem.Application.Features.Availability.Queries.GetAvailability;
-using BookingSystem.Application.Features.Availability.Queries.GetAvailabilityV2;
+﻿using BookingSystem.Application.Features.Availability.Queries.GetAvailabilityV2;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,7 +14,7 @@ public sealed class AvailabilityController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Get(
         [FromQuery] Guid tenantId,
-        [FromQuery] Guid staffId,
+        [FromQuery] Guid? staffId,
         [FromQuery] Guid serviceId,
         [FromQuery] DateOnly dateUtc,
         [FromQuery] int slotMinutes = 15,

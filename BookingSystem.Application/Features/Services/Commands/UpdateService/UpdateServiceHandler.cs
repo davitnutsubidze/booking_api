@@ -33,6 +33,6 @@ public sealed class UpdateServiceHandler : IRequestHandler<UpdateServiceCommand,
 
         await _uow.SaveChangesAsync(ct);
 
-        return new ServiceDto(s.Id, s.TenantId, s.Name, s.Description, s.DurationMinutes, s.Price, s.Currency, s.IsActive);
+        return new ServiceDto(s.Id, s.TenantId, s.Name, s.Description, s.DurationMinutes, s.Price, s.Currency, s.IsActive, s.StaffServices.Select(ss => ss.StaffId).Distinct().ToList());
     }
 }

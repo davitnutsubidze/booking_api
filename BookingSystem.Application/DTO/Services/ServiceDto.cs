@@ -9,5 +9,6 @@ public sealed record ServiceDto(
     decimal? Price,
     string? Currency,
     bool IsActive,
+    IReadOnlyList<Guid> StaffIds,
     bool? AssignedToStaff = null
 );

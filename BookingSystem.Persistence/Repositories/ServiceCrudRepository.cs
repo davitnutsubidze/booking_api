@@ -10,18 +10,42 @@ public sealed class ServiceCrudRepository : IServiceCrudRepository
     private readonly AppDbContext _db;
     public ServiceCrudRepository(AppDbContext db) => _db = db;
 
-    public Task<List<Service>> GetByTenantAsync(Guid tenantId, CancellationToken ct = default)
+    public Task<List<ServiceDto>> GetByTenantAsync(Guid tenantId,CancellationToken ct = default)
         => _db.Services
             .AsNoTracking()
             .Where(s => s.TenantId == tenantId)
             .OrderBy(s => s.Name)
+            .Select(s => new ServiceDto(
+            s.Id,
+            s.TenantId,
+            s.Name,
+            s.Description,
+            s.DurationMinutes,
+            s.Price,
+            s.Currency,
+            s.IsActive,
+            s.StaffServices.Select(ss => ss.StaffId).Distinct().ToList(),
+            null
+        ))
             .ToListAsync(ct);
-    public Task<List<Service>> GetByTenantAndStaffAsync(Guid tenantId, Guid? staffId, CancellationToken ct = default)
+    public Task<List<ServiceDto>> GetByTenantAndStaffAsync(Guid tenantId, Guid? staffId, CancellationToken ct = default)
     => _db.Services
         .AsNoTracking()
         .Where(s => s.TenantId == tenantId &&
                     s.StaffServices.Any(ss => ss.StaffId == staffId))
         .OrderBy(s => s.Name)
+         .Select(s => new ServiceDto(
+                s.Id,
+                s.TenantId,
+                s.Name,
+                s.Description,
+                s.DurationMinutes,
+                s.Price,
+                s.Currency,
+                s.IsActive,
+                s.StaffServices.Select(ss => ss.StaffId).ToList(), // StaffIds
+                s.StaffServices.Any(ss => ss.StaffId == staffId)   // AssignedToStaff
+            ))
         .ToListAsync(ct);
 
     public Task<List<ServiceDto>> GetAllWithAssignmentAsync(
@@ -42,7 +66,8 @@ public sealed class ServiceCrudRepository : IServiceCrudRepository
                 s.Price,
                 s.Currency,
                 s.IsActive,
-                s.StaffServices.Any(ss => ss.StaffId == staffId)
+                s.StaffServices.Select(ss => ss.StaffId).ToList(), // StaffIds
+                s.StaffServices.Any(ss => ss.StaffId == staffId)   // AssignedToStaff
             ))
             .ToListAsync(ct);
     }

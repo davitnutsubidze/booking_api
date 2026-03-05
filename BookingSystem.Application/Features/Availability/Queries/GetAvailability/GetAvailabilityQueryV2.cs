@@ -5,7 +5,7 @@ namespace BookingSystem.Application.Features.Availability.Queries.GetAvailabilit
 
 public sealed record GetAvailabilityV2Query(
     Guid TenantId,
-    Guid StaffId,
+    Guid? StaffId,
     Guid ServiceId,
     DateOnly DateUtc,
     int SlotMinutes = 15

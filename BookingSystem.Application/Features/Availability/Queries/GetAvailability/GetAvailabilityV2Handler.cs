@@ -1,10 +1,8 @@
 ﻿using BookingSystem.Application.Common.Exceptions;
 using BookingSystem.Application.DTOs;
+using BookingSystem.Application.Features.Availability.Queries.GetAvailabilityV2;
 using BookingSystem.Application.Interfaces;
-using BookingSystem.Domain.Entities;
 using MediatR;
-
-namespace BookingSystem.Application.Features.Availability.Queries.GetAvailabilityV2;
 
 public sealed class GetAvailabilityV2Handler
     : IRequestHandler<GetAvailabilityV2Query, AvailabilityResponseDto>
@@ -12,7 +10,7 @@ public sealed class GetAvailabilityV2Handler
     private readonly IServiceRepository _services;
     private readonly IWorkingHoursRepository _hours;
     private readonly IBlockedTimeRepository _blocked;
-    private readonly IAppointmentRepository _appointments; 
+    private readonly IAppointmentRepository _appointments;
     private readonly IStaffLunchBreakRepository _lunch;
     private readonly IStaffRepository _staff;
 
@@ -40,107 +38,144 @@ public sealed class GetAvailabilityV2Handler
         var service = await _services.GetByIdAsync(request.ServiceId, ct)
             ?? throw new NotFoundException("Service not found.");
 
-        //  Staff check (exists + tenant + active)
-        var staff = await _staff.GetByIdAsync(request.StaffId, ct)
-            ?? throw new NotFoundException("Staff not found.");
-
         if (service.TenantId != request.TenantId)
             throw new ConflictException("Service does not belong to this tenant.");
 
-        if (!staff.IsActive)
-            return new AvailabilityResponseDto(request.DateUtc, request.SlotMinutes, service.DurationMinutes, new());
+        // Time zone
+        var tz = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tbilisi");
+
+        // staff list selection
+        List<Booking.Domain.Entities.Staff> staffs;
+
+        if (request.StaffId is Guid staffId)
+        {
+            var one = await _staff.GetByIdAsync(staffId, ct)
+                ?? throw new NotFoundException("Staff not found.");
+
+            staffs = new() { one };
+        }
+        else
+        {
+            // დაგჭირდება repo მეთოდი: GetActiveByTenantAsync(...)
+            staffs = (await _staff.GetActiveByTenantAsync(request.TenantId, request.ServiceId, ct)).ToList();
+        }
+
+        // optional: თუ staffId==null და staff არ მოიძებნა
+        if (staffs.Count == 0)
+            return new AvailabilityResponseDto(request.DateUtc, request.SlotMinutes, service.DurationMinutes, new List<AvailabilityByStaffDto>());
 
         var durationMinutes = service.DurationMinutes;
 
-        // 1) Determine working hours window for the day
-        var day = request.DateUtc.DayOfWeek;
+        var results = new List<AvailabilityByStaffDto>(staffs.Count);
 
-        // staff override first (if exists)
-        var staffHours = await _hours.GetStaffHoursAsync(request.StaffId, day, ct);
-        if (staffHours is not null && staffHours.IsDayOff)
+        foreach (var s in staffs)
         {
-            return new AvailabilityResponseDto(request.DateUtc, request.SlotMinutes, durationMinutes, new());
+            if (!s.IsActive)
+            {
+                results.Add(new AvailabilityByStaffDto(s.Id, s.FullName, Array.Empty<AvailabilitySlotDto>()));
+                continue;
+            }
+
+            var slots = await GetSlotsForStaffAsync(
+                request.TenantId,
+                s.Id,
+                request.DateUtc,
+                request.SlotMinutes,
+                durationMinutes,
+                tz,
+                ct);
+
+            results.Add(new AvailabilityByStaffDto(s.Id, s.FullName, slots));
         }
 
-        // tenant hours fallback
-        var businessHours = await _hours.GetTenantHoursAsync(request.TenantId, day, ct);
+        return new AvailabilityResponseDto(request.DateUtc, request.SlotMinutes, durationMinutes, results);
+    }
+
+    private async Task<IReadOnlyList<AvailabilitySlotDto>> GetSlotsForStaffAsync(
+        Guid tenantId,
+        Guid staffId,
+        DateOnly date,
+        int slotMinutes,
+        int durationMinutes,
+        TimeZoneInfo tz,
+        CancellationToken ct)
+    {
+        var day = date.DayOfWeek;
+
+        // 1) working hours
+        var staffHours = await _hours.GetStaffHoursAsync(staffId, day, ct);
+        if (staffHours is not null && staffHours.IsDayOff)
+            return Array.Empty<AvailabilitySlotDto>();
+
+        var tenantHours = await _hours.GetTenantHoursAsync(tenantId, day, ct);
         if (staffHours is null)
         {
-            if (businessHours is null || businessHours.IsClosed)
-                return new AvailabilityResponseDto(request.DateUtc, request.SlotMinutes, durationMinutes, new());
+            if (tenantHours is null || tenantHours.IsClosed)
+                return Array.Empty<AvailabilitySlotDto>();
         }
-        
 
-        var startTime = staffHours?.StartTime ?? businessHours!.StartTime;
-        var endTime = staffHours?.EndTime ?? businessHours!.EndTime;
+        var startTime = staffHours?.StartTime ?? tenantHours!.StartTime;
+        var endTime = staffHours?.EndTime ?? tenantHours!.EndTime;
 
-        // convert DateOnly + TimeOnly (local Time) -> convert local time to DateTime UTC  -> 
-        var tz = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tbilisi");
-        var workStartLocal = request.DateUtc.ToDateTime(startTime, DateTimeKind.Unspecified);
-        var workEndLocal = request.DateUtc.ToDateTime(endTime, DateTimeKind.Unspecified);
+        var workStartLocal = date.ToDateTime(startTime, DateTimeKind.Unspecified);
+        var workEndLocal = date.ToDateTime(endTime, DateTimeKind.Unspecified);
 
         var workStartUtc = TimeZoneInfo.ConvertTimeToUtc(workStartLocal, tz);
         var workEndUtc = TimeZoneInfo.ConvertTimeToUtc(workEndLocal, tz);
 
         if (workEndUtc <= workStartUtc)
-            return new AvailabilityResponseDto(request.DateUtc, request.SlotMinutes, durationMinutes, new());
+            return Array.Empty<AvailabilitySlotDto>();
 
-        // 2) Load "busy" intervals: appointments + blocked times (merge conceptually)
-        var appts = await _appointments.GetStaffRangeAsync(request.StaffId, workStartUtc, workEndUtc, ct);
+        // 2) busy intervals
+        var appts = await _appointments.GetStaffRangeAsync(staffId, workStartUtc, workEndUtc, ct);
 
         var blocked = await _blocked.GetRangeAsync(
-            request.TenantId,
-            request.StaffId,
+            tenantId,
+            staffId,
             workStartUtc,
             workEndUtc,
             ct);
 
-        // convert both to a common interval list
-        var busyIntervals = new List<(DateTime Start, DateTime End)>();
+        var busy = new List<(DateTime Start, DateTime End)>();
 
-        busyIntervals.AddRange(appts.Select(a => (a.StartDateTime, a.EndDateTime)));
+        busy.AddRange(appts.Select(a => (a.StartDateTime, a.EndDateTime)));
+        busy.AddRange(blocked.Select(b => (b.StartDateTimeUtc, b.EndDateTimeUtc)));
 
-        // IMPORTANT: adjust these property names if your BlockedTime uses StartDateTime/EndDateTime
-        busyIntervals.AddRange(blocked.Select(b => (b.StartDateTimeUtc, b.EndDateTimeUtc)));
-
-
-        // 2.1) Staff lunch break for that day (weekly recurring)
-        var lunch = await _lunch.GetByStaffAndDayAsync(request.StaffId, day, ct);
+        // 2.1) lunch
+        var lunch = await _lunch.GetByStaffAndDayAsync(staffId, day, ct);
 
         if (lunch is not null && lunch.IsEnabled)
         {
-            // convert DateOnly + TimeOnly (local Time) -> convert local time to DateTime UTC  -> 
-            var lunchStartLocal = request.DateUtc.ToDateTime(lunch.StartTime, DateTimeKind.Unspecified);
-            var lunchEndLocal = request.DateUtc.ToDateTime(lunch.EndTime, DateTimeKind.Unspecified);
+            var lunchStartUtc = TimeZoneInfo.ConvertTimeToUtc(
+                date.ToDateTime(lunch.StartTime, DateTimeKind.Unspecified), tz);
 
-            var lunchStartUtc = TimeZoneInfo.ConvertTimeToUtc(lunchStartLocal, tz);
-            var lunchEndUtc = TimeZoneInfo.ConvertTimeToUtc(lunchEndLocal, tz);
+            var lunchEndUtc = TimeZoneInfo.ConvertTimeToUtc(
+                date.ToDateTime(lunch.EndTime, DateTimeKind.Unspecified), tz);
 
             if (lunchEndUtc > lunchStartUtc)
             {
-                // Clip lunch to working window (so it doesn't block outside work hours)
                 var clippedStart = lunchStartUtc < workStartUtc ? workStartUtc : lunchStartUtc;
                 var clippedEnd = lunchEndUtc > workEndUtc ? workEndUtc : lunchEndUtc;
 
                 if (clippedEnd > clippedStart)
-                    busyIntervals.Add((clippedStart, clippedEnd));
+                    busy.Add((clippedStart, clippedEnd));
             }
         }
 
-        // 3) Generate candidate slots, skip if overlaps any busy interval
+        // 3) generate slots
         var slots = new List<AvailabilitySlotDto>();
 
         for (var slotStart = workStartUtc;
              slotStart.AddMinutes(durationMinutes) <= workEndUtc;
-             slotStart = slotStart.AddMinutes(request.SlotMinutes))
+             slotStart = slotStart.AddMinutes(slotMinutes))
         {
             var slotEnd = slotStart.AddMinutes(durationMinutes);
 
-            var overlaps = busyIntervals.Any(i => i.Start < slotEnd && i.End > slotStart);
+            var overlaps = busy.Any(i => i.Start < slotEnd && i.End > slotStart);
             if (!overlaps)
                 slots.Add(new AvailabilitySlotDto(slotStart, slotEnd));
         }
 
-        return new AvailabilityResponseDto(request.DateUtc, request.SlotMinutes, durationMinutes, slots);
+        return slots;
     }
 }

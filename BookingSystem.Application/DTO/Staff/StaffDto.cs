@@ -7,5 +7,6 @@ public sealed record StaffDto(
     string LastName,
     string? Phone,
     string? Bio,
-    bool IsActive
+    bool IsActive,
+    IReadOnlyList<Guid> ServiceIds
 );

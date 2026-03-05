@@ -18,6 +18,6 @@ public sealed class GetStaffByIdHandler : IRequestHandler<GetStaffByIdQuery, Sta
         if (s.TenantId != request.TenantId)
             throw new ConflictException("Staff does not belong to this tenant.");
 
-        return new StaffDto(s.Id, s.TenantId, s.FirstName, s.LastName, s.Phone, s.Bio, s.IsActive);
+        return new StaffDto(s.Id, s.TenantId, s.FirstName, s.LastName, s.Phone, s.Bio, s.IsActive, s.StaffServices.Select(ss => ss.ServiceId).ToList());
     }
 }

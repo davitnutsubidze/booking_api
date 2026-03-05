@@ -34,7 +34,7 @@ public sealed class SetStaffServicesHandler : IRequestHandler<SetStaffServicesCo
 
         // 2) ყველა სერვისი არსებობს თ არა + ეკუთვნის ტენატს
         // Efficient way: fetch tenant services and compare
-        var tenantServices = await _services.GetByTenantAsync(request.TenantId, ct);
+        var tenantServices = await _services.GetByTenantAsync(request.TenantId,  ct);
         var tenantServiceIds = tenantServices.Select(s => s.Id).ToHashSet();
 
         var invalid = request.ServiceIds.Where(id => !tenantServiceIds.Contains(id)).ToList();

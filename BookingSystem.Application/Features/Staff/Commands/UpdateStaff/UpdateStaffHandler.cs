@@ -32,6 +32,6 @@ public sealed class UpdateStaffHandler : IRequestHandler<UpdateStaffCommand, Sta
 
         await _uow.SaveChangesAsync(ct);
 
-        return new StaffDto(s.Id, s.TenantId, s.FirstName, s.LastName, s.Phone, s.Bio, s.IsActive);
+        return new StaffDto(s.Id, s.TenantId, s.FirstName, s.LastName, s.Phone, s.Bio, s.IsActive, s.StaffServices.Select(ss => ss.ServiceId).ToList());
     }
 }

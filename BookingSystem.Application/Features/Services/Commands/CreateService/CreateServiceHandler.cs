@@ -34,7 +34,8 @@ public sealed class CreateServiceHandler : IRequestHandler<CreateServiceCommand,
 
         return new ServiceDto(
             service.Id, service.TenantId, service.Name, service.Description,
-            service.DurationMinutes, service.Price, service.Currency, service.IsActive
+            service.DurationMinutes, service.Price, service.Currency, service.IsActive,
+            service.StaffServices.Select(ss => ss.StaffId).Distinct().ToList()
         );
     }
 }

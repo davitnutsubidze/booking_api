@@ -5,9 +5,9 @@ namespace BookingSystem.Application.Interfaces;
 
 public interface IServiceCrudRepository
 {
-    Task<List<Service>> GetByTenantAsync(Guid tenantId, CancellationToken ct = default);
+    Task<List<ServiceDto>> GetByTenantAsync(Guid tenantId, CancellationToken ct = default);
 
-    Task<List<Service>> GetByTenantAndStaffAsync(Guid tenantId, Guid? staffId, CancellationToken ct = default);
+    Task<List<ServiceDto>> GetByTenantAndStaffAsync(Guid tenantId, Guid? staffId, CancellationToken ct = default);
 
     Task<List<ServiceDto>> GetAllWithAssignmentAsync(
     Guid tenantId,

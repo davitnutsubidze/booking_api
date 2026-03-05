@@ -14,7 +14,15 @@ public sealed class GetStaffListHandler : IRequestHandler<GetStaffListQuery, Lis
         var items = await _repo.GetByTenantAsync(request.TenantId, ct);
 
         return items.Select(s => new StaffDto(
-            s.Id, s.TenantId, s.FirstName, s.LastName, s.Phone, s.Bio, s.IsActive
+            s.Id, 
+            s.TenantId,
+            s.FirstName, 
+            s.LastName,
+            s.Phone, s.Bio,
+            s.IsActive,
+            s.StaffServices
+            .Select(ss => ss.ServiceId)
+            .ToList()
         )).ToList();
     }
 }

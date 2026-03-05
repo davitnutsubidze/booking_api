@@ -11,10 +11,12 @@ public sealed class StaffRepository : IStaffRepository
 
     public Task<List<Staff>> GetByTenantAsync(Guid tenantId, CancellationToken ct = default)
         => _db.Staff
-            .AsNoTracking()
-            .Where(s => s.TenantId == tenantId)
-            .OrderBy(s => s.LastName).ThenBy(s => s.FirstName)
-            .ToListAsync(ct);
+        .AsNoTracking()
+        .Where(s => s.TenantId == tenantId)
+        .Include(s => s.StaffServices)
+        .OrderBy(s => s.FirstName)
+        .ThenBy(s => s.LastName)
+        .ToListAsync(ct);
 
     public Task<string?> GetStaffNameAsync(Guid tenantId, Guid staffId, CancellationToken ct = default)
     {
@@ -23,6 +25,17 @@ public sealed class StaffRepository : IStaffRepository
             .Where(s => s.TenantId == tenantId && s.Id == staffId)
             .Select(s => s.FirstName + " " + s.LastName)
             .FirstOrDefaultAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<Staff>> GetActiveByTenantAsync(Guid tenantId, Guid serviceId, CancellationToken ct)
+    {
+        return await _db.Staff
+            .Where(s => s.TenantId == tenantId &&
+                s.IsActive &&
+                s.StaffServices.Any(ss => ss.ServiceId == serviceId))
+            .OrderBy(s => s.FirstName)
+            .ThenBy(s => s.LastName)
+            .ToListAsync(ct);
     }
 
     public Task<Staff?> GetByIdAsync(Guid id, CancellationToken ct = default)
