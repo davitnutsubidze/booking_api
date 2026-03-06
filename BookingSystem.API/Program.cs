@@ -6,7 +6,12 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(
+    opt =>
+    {
+        opt.Filters.Add<BookingSystem.API.Filters.WrapResponseFilter>();
+    });
+builder.Services.AddScoped<BookingSystem.API.Filters.WrapResponseFilter>();
 // აქ ვრთავთ Application layer-ს (MediatR + Validators)
 builder.Services.AddApplication();
 
@@ -14,6 +19,10 @@ builder.Services.AddPersistence(builder.Configuration);
 builder.Services.AddEndpointsApiExplorer();
 
 //სვაგერი
+//builder.Services.AddSwaggerGen(options =>
+//{
+//    options.OperationFilter<BookingSystem.API.Swagger.ApiResponseOperationFilter>();
+//});
 builder.Services.AddSwaggerGen();
 
 //ვამატებთ მიდდლვეარს
@@ -31,20 +40,15 @@ builder.Services.AddCors(options =>
          .AllowAnyMethod()
     );
 });
-
-
 var app = builder.Build();
-
-
-
-
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-// ჩავსვათ მიდლვეარი ფაიფლაინში , სვაგერის მერე და მაპ კონტროლერამდე
+
+// მიდლვეარი უნდა იყოს სვაგერის მერე და მაპ კონტროლერამდე, არ გაატოკო :დ
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 // Build-ის მერე:

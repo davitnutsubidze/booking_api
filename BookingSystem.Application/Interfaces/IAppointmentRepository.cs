@@ -1,5 +1,6 @@
 ﻿using Booking.Domain.Entities;
 using Booking.Domain.Enums;
+using BookingSystem.Application.DTOs;
 
 namespace BookingSystem.Application.Interfaces;
 
@@ -15,7 +16,7 @@ public interface IAppointmentRepository
         DateTime endUtc,
         CancellationToken ct = default);
 
-    Task<List<Appointment>> GetByBusinessRangeAsync(
+    Task<List<AppointmentDto>> GetByBusinessRangeAsync(
         Guid tenantId,
         DateTime fromUtc,
         DateTime toUtc,

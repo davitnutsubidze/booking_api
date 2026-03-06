@@ -22,7 +22,8 @@ public sealed class GetAppointmentsRangeHandler
 
         return items.Select(a => new AppointmentDto(
             a.Id, a.TenantId, a.ServiceId, a.StaffId, a.CustomerId,
-            a.StartDateTime, a.EndDateTime, a.Status, a.Notes
+            a.StartDateTimeUtc, a.EndDateTimeUtc, a.Status, a.Notes,
+            a.StaffName, a.ServiceName
         )).ToList();
     }
 }

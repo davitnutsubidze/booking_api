@@ -1,4 +1,6 @@
-﻿using BookingSystem.Application.DTOs.Services;
+﻿using BookingSystem.API.Contracts;
+using BookingSystem.Application.DTOs.BlockedTimes;
+using BookingSystem.Application.DTOs.Services;
 using BookingSystem.Application.Features.Services.Commands.CreateService;
 using BookingSystem.Application.Features.Services.Commands.DeleteService;
 using BookingSystem.Application.Features.Services.Commands.UpdateService;
@@ -17,6 +19,7 @@ public sealed class ServicesController : ControllerBase
     public ServicesController(IMediator mediator) => _mediator = mediator;
 
     [HttpGet]
+    [ProducesResponseType(typeof(ApiResponse<List<ServiceDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> List(Guid tenantId, CancellationToken ct, [FromQuery] Guid? staffId,
     [FromQuery] bool filterByStaff = true)
     => Ok(await _mediator.Send(new GetServicesListQuery(tenantId, staffId, filterByStaff), ct));

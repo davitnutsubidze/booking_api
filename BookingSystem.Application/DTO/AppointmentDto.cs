@@ -11,5 +11,7 @@ public sealed record AppointmentDto(
     DateTime StartDateTimeUtc,
     DateTime EndDateTimeUtc,
     AppointmentStatus Status,
-    string? Notes
+    string? Notes,
+    string? StaffName,
+    string? ServiceName
 );

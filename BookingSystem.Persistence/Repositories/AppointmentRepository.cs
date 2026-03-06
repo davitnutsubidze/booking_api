@@ -1,5 +1,6 @@
 ﻿using Booking.Domain.Entities;
 using Booking.Domain.Enums;
+using BookingSystem.Application.DTOs;
 using BookingSystem.Application.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -35,7 +36,7 @@ public class AppointmentRepository : IAppointmentRepository
             ct);
     }
 
-    public async Task<List<Appointment>> GetByBusinessRangeAsync(
+    public async Task<List<AppointmentDto>> GetByBusinessRangeAsync(
     Guid tenantId,
     DateTime fromUtc,
     DateTime toUtc,
@@ -43,9 +44,22 @@ public class AppointmentRepository : IAppointmentRepository
     {
         return await _db.Appointments
             .Where(a => a.TenantId == tenantId &&
-                        a.StartDateTime < toUtc &&
-                        a.EndDateTime > fromUtc)
+                        a.StartDateTime <= toUtc &&
+                        a.EndDateTime >= fromUtc)
             .OrderBy(a => a.StartDateTime)
+                .Select(a => new AppointmentDto(
+        a.Id,
+        a.TenantId,
+        a.ServiceId,
+        a.StaffId,
+        a.CustomerId,
+        a.StartDateTime,
+        a.EndDateTime,
+        a.Status,
+        a.Notes,
+        a.Staff.FirstName,
+        a.Service.Name
+    ))
             .ToListAsync(ct);
     }
 

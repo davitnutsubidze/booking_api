@@ -26,7 +26,9 @@ public sealed class GetAppointmentByIdHandler : IRequestHandler<GetAppointmentBy
             a.StartDateTime,
             a.EndDateTime,
             a.Status,
-            a.Notes
+            a.Notes,
+            a.Staff.FirstName,
+            a.Service.Name
         );
     }
 }
