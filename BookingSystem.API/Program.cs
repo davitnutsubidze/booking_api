@@ -42,11 +42,12 @@ builder.Services.AddCors(options =>
 });
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
+//დროებით
+//if (app.Environment.IsDevelopment())
+//{
     app.UseSwagger();
     app.UseSwaggerUI();
-}
+//}
 
 // მიდლვეარი უნდა იყოს სვაგერის მერე და მაპ კონტროლერამდე, არ გაატოკო :დ
 app.UseMiddleware<ExceptionHandlingMiddleware>();

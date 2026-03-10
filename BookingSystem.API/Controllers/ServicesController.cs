@@ -1,5 +1,4 @@
 ﻿using BookingSystem.API.Contracts;
-using BookingSystem.Application.DTOs.BlockedTimes;
 using BookingSystem.Application.DTOs.Services;
 using BookingSystem.Application.Features.Services.Commands.CreateService;
 using BookingSystem.Application.Features.Services.Commands.DeleteService;

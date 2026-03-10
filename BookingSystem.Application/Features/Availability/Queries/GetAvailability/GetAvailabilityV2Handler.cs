@@ -32,8 +32,8 @@ public sealed class GetAvailabilityV2Handler
 
     public async Task<AvailabilityResponseDto> Handle(GetAvailabilityV2Query request, CancellationToken ct)
     {
-        if (request.SlotMinutes is < 5 or > 60)
-            throw new ConflictException("SlotMinutes must be between 5 and 60.");
+        if (request.SlotMinutes is < 5 or > 400)
+            throw new ConflictException("SlotMinutes must be between 5 and 400.");
 
         var service = await _services.GetByIdAsync(request.ServiceId, ct)
             ?? throw new NotFoundException("Service not found.");

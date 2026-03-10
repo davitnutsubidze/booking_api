@@ -57,7 +57,7 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IStaffLunchBreakRepository, StaffLunchBreakRepository>();
 
-
+        services.AddScoped<ITenantRepository, TenantRepository>();
 
         return services;
     }
