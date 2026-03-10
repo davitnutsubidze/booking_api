@@ -2,6 +2,7 @@
 using BookingSystem.Application.DependencyInjection;
 using BookingSystem.Persistence.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
+using BookingSystem.Persistence;
 
 
 var builder = WebApplication.CreateBuilder(args);
