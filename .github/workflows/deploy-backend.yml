@@ -19,34 +19,34 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore
-        run: dotnet restore
+        run: dotnet restore BookingSystem.API/BookingSystem.API.csproj
 
       - name: Build
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet build BookingSystem.API/BookingSystem.API.csproj --configuration Release --no-restore
 
       - name: Publish API
-        run: dotnet publish BookingSystem.API/BookingSystem.API.csproj -c Release -o ./publish
-
+        run: dotnet publish BookingSystem.API/BookingSystem.API.csproj -c Release -o ./publish --no-build
 
       - name: Test SSH host
         run: |
-         HOST="${{ secrets.EC2_HOST }}"
-         ping -c 1 "$HOST"
-         
+          HOST="${{ secrets.EC2_HOST }}"
+          ping -c 1 "$HOST"
+
       - name: Debug EC2_HOST format
         run: |
-         HOST="${{ secrets.EC2_HOST }}"
-         echo "Length: ${#HOST}"
-         printf '%s' "$HOST" | od -An -t x1
+          HOST="${{ secrets.EC2_HOST }}"
+          echo "Length: ${#HOST}"
+          printf '%s' "$HOST" | od -An -t x1
 
       - name: Debug EC2 host
         run: |
-         if [ -z "${{ secrets.EC2_HOST }}" ]; then
-           echo "EC2_HOST is empty"
-           exit 1
-         else
-           echo "EC2_HOST exists" 
-         fi
+          if [ -z "${{ secrets.EC2_HOST }}" ]; then
+            echo "EC2_HOST is empty"
+            exit 1
+          else
+            echo "EC2_HOST exists"
+          fi
+
       - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
@@ -57,6 +57,7 @@ jobs:
       - name: Copy files to EC2
         run: |
           scp -i ~/.ssh/ec2_key -r ./publish/* ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/var/www/booking-api/
+
       - name: Restart API
         run: |
           ssh -i ~/.ssh/ec2_key ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
