@@ -27,6 +27,15 @@ jobs:
       - name: Publish API
         run: dotnet publish BookingSystem.API/BookingSystem.API.csproj -c Release -o ./publish
 
+
+      - name: Debug EC2 host
+        run: |
+         if [ -z "${{ secrets.EC2_HOST }}" ]; then
+           echo "EC2_HOST is empty"
+           exit 1
+         else
+           echo "EC2_HOST exists" 
+         fi
       - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
