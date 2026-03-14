@@ -7,15 +7,15 @@ namespace Booking.Domain.Entities
 {
     public class Customer : AuditableEntity
     {
-        public Guid TenantId { get; set; }
-        public Tenant Tenant { get; set; } = null!;
-
+        public Guid UserId { get; set; }
+        public User User { get; set; } = default!;
         public string FirstName { get; set; } = null!;
         public string LastName { get; set; } = null!;
         public string Phone { get; set; } = null!;
         public string? Email { get; set; }
         public string? Notes { get; set; }
 
+        public ICollection<CustomerTenant> CustomerTenants { get; set; } = new List<CustomerTenant>();
         public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
     }
 

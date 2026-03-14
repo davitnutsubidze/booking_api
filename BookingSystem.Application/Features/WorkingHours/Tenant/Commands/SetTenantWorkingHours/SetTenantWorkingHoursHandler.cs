@@ -36,8 +36,6 @@ public sealed class SetTenantWorkingHoursHandler : IRequestHandler<SetTenantWork
                 StartTime = start,
                 EndTime = end,
                 IsClosed = d.IsClosed
-                // თუ CreatedAt გაქვს NOT NULL, ან default მიეცი DB-ში,
-                // ან აქ ჩაწერე CreatedAt = DateTime.UtcNow
             });
         }
 

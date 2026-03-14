@@ -11,17 +11,23 @@ public sealed class CreateAppointmentHandler : IRequestHandler<CreateAppointment
     private readonly IAppointmentRepository _appointments;
     private readonly ICustomerRepository _customers;
     private readonly IServiceRepository _services;
+    private readonly IUserRepository _users;
+    private readonly ICustomerTenantRepository _customerTenants;
     private readonly IUnitOfWork _uow;
 
     public CreateAppointmentHandler(
         IAppointmentRepository appointments,
         ICustomerRepository customers,
+        IUserRepository users,
         IServiceRepository services,
+        ICustomerTenantRepository customerTenant,
         IUnitOfWork uow)
     {
         _appointments = appointments;
         _customers = customers;
         _services = services;
+        _users = users;
+        _customerTenants = customerTenant;
         _uow = uow;
     }
 
@@ -44,11 +50,38 @@ public sealed class CreateAppointmentHandler : IRequestHandler<CreateAppointment
 
         // 3) customer (find by phone, else create)
         var customer = await _customers.FindByPhoneAsync(request.TenantId, request.CustomerPhone, ct);
+
         if (customer is null)
         {
+            // 3.1) ჯერ user ვიპოვოთ tenant-ის ფარგლებში
+            var user = await _users.FindByTenantAndEmailOrPhoneAsync(
+                request.TenantId,
+                request.CustomerEmail,
+                request.CustomerPhone,
+                ct);
+
+            // 3.2) თუ user არ არსებობს -> შევქმნათ
+            if (user is null)
+            {
+                user = new User
+                {
+                    TenantId = request.TenantId,
+                    Phone = request.CustomerPhone,
+                    Email = request.CustomerEmail ?? string.Empty,
+                    PasswordHash = "12345678",
+                    Role = UserRole.Customer,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _users.AddAsync(user, ct);
+                await _uow.SaveChangesAsync(ct); // რომ user.Id მივიღოთ
+            }
+
+            // 3.3) customer შევქმნათ user-ზე მიბმით
             customer = new Customer
             {
-                TenantId = request.TenantId,
+                UserId = user.Id,
                 FirstName = request.CustomerFirstName,
                 LastName = request.CustomerLastName,
                 Phone = request.CustomerPhone,
@@ -58,9 +91,28 @@ public sealed class CreateAppointmentHandler : IRequestHandler<CreateAppointment
 
             await _customers.AddAsync(customer, ct);
             await _uow.SaveChangesAsync(ct); // რომ customer.Id მივიღოთ
-        }
 
-        // 4) create appointment
+
+        }
+        // 4) CustomerTenant კავშირიც შევქმნათ თუ არ არსებობს
+        var customerTenantExists = await _customerTenants.ExistsAsync(customer.Id, request.TenantId, ct);
+
+        if (!customerTenantExists)
+        {
+            var customerTenant = new CustomerTenant
+            {
+                CustomerId = customer.Id,
+                TenantId = request.TenantId,
+                FirstVisitAt = DateTime.UtcNow,
+                LastVisitAt = DateTime.UtcNow,
+                IsBlocked = false,
+                IsDeleted = false
+            };
+
+            await _customerTenants.AddAsync(customerTenant, ct);
+            await _uow.SaveChangesAsync(ct);
+        }
+        // 5) create appointment
         var appointment = new Appointment
         {
             TenantId = request.TenantId,

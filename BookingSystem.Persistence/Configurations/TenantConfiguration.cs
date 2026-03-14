@@ -4,10 +4,12 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace BookingSystem.Persistence.Configurations;
 
-public class BusinessConfiguration : IEntityTypeConfiguration<Tenant>
+public class TenantConfiguration : IEntityTypeConfiguration<Tenant>
 {
     public void Configure(EntityTypeBuilder<Tenant> builder)
     {
+        builder.ToTable("Tenant");
+
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.Name)

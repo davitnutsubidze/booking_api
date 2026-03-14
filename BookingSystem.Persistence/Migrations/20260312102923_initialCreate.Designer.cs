@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BookingSystem.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260218145609_CreateServicesTable")]
-    partial class CreateServicesTable
+    [Migration("20260312102923_initialCreate")]
+    partial class initialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -29,9 +29,6 @@ namespace BookingSystem.Persistence.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
@@ -58,6 +55,9 @@ namespace BookingSystem.Persistence.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -67,9 +67,9 @@ namespace BookingSystem.Persistence.Migrations
 
                     b.HasIndex("ServiceId");
 
-                    b.HasIndex("TenantId", "StartDateTime");
-
                     b.HasIndex("StaffId", "StartDateTime");
+
+                    b.HasIndex("TenantId", "StartDateTime");
 
                     b.ToTable("Appointments");
                 });
@@ -80,13 +80,10 @@ namespace BookingSystem.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uuid");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("EndDateTime")
+                    b.Property<DateTime>("EndDateTimeUtc")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Reason")
@@ -95,28 +92,28 @@ namespace BookingSystem.Persistence.Migrations
                     b.Property<Guid?>("StaffId")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("StartDateTime")
+                    b.Property<DateTime>("StartDateTimeUtc")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TenantId");
-
                     b.HasIndex("StaffId");
 
-                    b.ToTable("BlockedTime");
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("BlockedTimes");
                 });
 
             modelBuilder.Entity("Booking.Domain.Entities.Customer", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
@@ -143,9 +140,12 @@ namespace BookingSystem.Persistence.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("TenantId");
+                    b.HasIndex("UserId");
 
                     b.ToTable("Customers");
                 });
@@ -195,14 +195,10 @@ namespace BookingSystem.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uuid");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Currency")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Description")
@@ -218,8 +214,11 @@ namespace BookingSystem.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<decimal>("Price")
+                    b.Property<decimal?>("Price")
                         .HasColumnType("numeric");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -240,9 +239,6 @@ namespace BookingSystem.Persistence.Migrations
                     b.Property<string>("Bio")
                         .HasColumnType("text");
 
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uuid");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -259,6 +255,9 @@ namespace BookingSystem.Persistence.Migrations
 
                     b.Property<string>("Phone")
                         .HasColumnType("text");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -339,16 +338,13 @@ namespace BookingSystem.Persistence.Migrations
                     b.HasIndex("Slug")
                         .IsUnique();
 
-                    b.ToTable("Tenant");
+                    b.ToTable("Tenant", (string)null);
                 });
 
             modelBuilder.Entity("Booking.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("TenantId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
@@ -358,23 +354,22 @@ namespace BookingSystem.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
-
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<int>("Role")
                         .HasColumnType("integer");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -386,14 +381,130 @@ namespace BookingSystem.Persistence.Migrations
                     b.ToTable("User");
                 });
 
+            modelBuilder.Entity("BookingSystem.Domain.Entities.StaffWorkingHours", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("integer");
+
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<bool>("IsDayOff")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("StaffId")
+                        .HasColumnType("uuid");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("time without time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StaffId", "DayOfWeek")
+                        .IsUnique();
+
+                    b.ToTable("StaffWorkingHours");
+                });
+
+            modelBuilder.Entity("BookingSystem.Domain.Entities.TenantWorkingHours", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("integer");
+
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<bool>("IsClosed")
+                        .HasColumnType("boolean");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TenantWorkingHours");
+                });
+
+            modelBuilder.Entity("CustomerTenant", b =>
+                {
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("FirstVisitAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsBlocked")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastVisitAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.HasKey("CustomerId", "TenantId");
+
+                    b.HasIndex("TenantId", "IsBlocked");
+
+                    b.HasIndex("TenantId", "LastVisitAt");
+
+                    b.ToTable("CustomerTenants", (string)null);
+                });
+
+            modelBuilder.Entity("StaffLunchBreak", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("integer");
+
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("StaffId")
+                        .HasColumnType("uuid");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("StaffId", "DayOfWeek")
+                        .IsUnique();
+
+                    b.ToTable("StaffLunchBreaks", (string)null);
+                });
+
             modelBuilder.Entity("Booking.Domain.Entities.Appointment", b =>
                 {
-                    b.HasOne("Booking.Domain.Entities.Tenant", "Business")
-                        .WithMany("Appointments")
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("Booking.Domain.Entities.Customer", "Customer")
                         .WithMany("Appointments")
                         .HasForeignKey("CustomerId")
@@ -412,41 +523,47 @@ namespace BookingSystem.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Business");
+                    b.HasOne("Booking.Domain.Entities.Tenant", "Tenant")
+                        .WithMany("Appointments")
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Customer");
 
                     b.Navigation("Service");
 
                     b.Navigation("Staff");
+
+                    b.Navigation("Tenant");
                 });
 
             modelBuilder.Entity("Booking.Domain.Entities.BlockedTime", b =>
                 {
-                    b.HasOne("Booking.Domain.Entities.Tenant", "Business")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("Booking.Domain.Entities.Staff", "Staff")
                         .WithMany()
                         .HasForeignKey("StaffId");
 
-                    b.Navigation("Business");
-
-                    b.Navigation("Staff");
-                });
-
-            modelBuilder.Entity("Booking.Domain.Entities.Customer", b =>
-                {
-                    b.HasOne("Booking.Domain.Entities.Tenant", "Business")
-                        .WithMany("Customers")
+                    b.HasOne("Booking.Domain.Entities.Tenant", "Tenant")
+                        .WithMany()
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Business");
+                    b.Navigation("Staff");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Booking.Domain.Entities.Customer", b =>
+                {
+                    b.HasOne("Booking.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Booking.Domain.Entities.Payment", b =>
@@ -462,18 +579,18 @@ namespace BookingSystem.Persistence.Migrations
 
             modelBuilder.Entity("Booking.Domain.Entities.Service", b =>
                 {
-                    b.HasOne("Booking.Domain.Entities.Tenant", "Business")
+                    b.HasOne("Booking.Domain.Entities.Tenant", "Tenant")
                         .WithMany("Services")
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Business");
+                    b.Navigation("Tenant");
                 });
 
             modelBuilder.Entity("Booking.Domain.Entities.Staff", b =>
                 {
-                    b.HasOne("Booking.Domain.Entities.Tenant", "Business")
+                    b.HasOne("Booking.Domain.Entities.Tenant", "Tenant")
                         .WithMany("StaffMembers")
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -483,7 +600,7 @@ namespace BookingSystem.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("UserId");
 
-                    b.Navigation("Business");
+                    b.Navigation("Tenant");
 
                     b.Navigation("User");
                 });
@@ -509,16 +626,46 @@ namespace BookingSystem.Persistence.Migrations
 
             modelBuilder.Entity("Booking.Domain.Entities.User", b =>
                 {
-                    b.HasOne("Booking.Domain.Entities.Tenant", "Business")
+                    b.HasOne("Booking.Domain.Entities.Tenant", null)
                         .WithMany("Users")
                         .HasForeignKey("TenantId");
+                });
 
-                    b.Navigation("Business");
+            modelBuilder.Entity("CustomerTenant", b =>
+                {
+                    b.HasOne("Booking.Domain.Entities.Customer", "Customer")
+                        .WithMany("CustomerTenants")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Booking.Domain.Entities.Tenant", "Tenant")
+                        .WithMany("CustomerTenants")
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("StaffLunchBreak", b =>
+                {
+                    b.HasOne("Booking.Domain.Entities.Staff", "Staff")
+                        .WithMany()
+                        .HasForeignKey("StaffId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Staff");
                 });
 
             modelBuilder.Entity("Booking.Domain.Entities.Customer", b =>
                 {
                     b.Navigation("Appointments");
+
+                    b.Navigation("CustomerTenants");
                 });
 
             modelBuilder.Entity("Booking.Domain.Entities.Service", b =>
@@ -539,7 +686,7 @@ namespace BookingSystem.Persistence.Migrations
                 {
                     b.Navigation("Appointments");
 
-                    b.Navigation("Customers");
+                    b.Navigation("CustomerTenants");
 
                     b.Navigation("Services");
 

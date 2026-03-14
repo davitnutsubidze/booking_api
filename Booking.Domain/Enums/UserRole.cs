@@ -7,7 +7,8 @@ namespace Booking.Domain.Enums
     public enum UserRole
     {
         SuperAdmin = 0,
-        Owner = 1,
-        Staff = 2
+        Tenant = 1,
+        Staff = 2,
+        Customer = 3
     }
 }

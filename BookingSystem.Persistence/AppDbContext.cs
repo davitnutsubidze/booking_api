@@ -18,6 +18,7 @@ public class AppDbContext : DbContext
     public DbSet<User> User => Set<User>();
     public DbSet<TenantWorkingHours> TenantWorkingHours => Set<TenantWorkingHours>();
     public DbSet<StaffWorkingHours> StaffWorkingHours => Set<StaffWorkingHours>();
+    public DbSet<CustomerTenant> CustomerTenants => Set<CustomerTenant>();
 
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }

@@ -59,6 +59,10 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<ITenantRepository, TenantRepository>();
 
+        services.AddScoped<ICustomerTenantRepository, CustomerTenantRepository>();
+        
+        services.AddScoped<IUserRepository, UserRepository>();
+        
         return services;
     }
 }

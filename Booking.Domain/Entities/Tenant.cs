@@ -18,11 +18,11 @@ namespace Booking.Domain.Entities
         public string TimeZone { get; set; } = "UTC";
 
         public bool IsActive { get; set; } = true;
-
+        
         public ICollection<User> Users { get; set; } = new List<User>();
         public ICollection<Staff> StaffMembers { get; set; } = new List<Staff>();
         public ICollection<Service> Services { get; set; } = new List<Service>();
-        public ICollection<Customer> Customers { get; set; } = new List<Customer>();
+        public ICollection<CustomerTenant> CustomerTenants { get; set; } = new List<CustomerTenant>();
         public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
     }
 

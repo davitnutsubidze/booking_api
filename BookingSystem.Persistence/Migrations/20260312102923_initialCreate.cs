@@ -6,11 +6,27 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace BookingSystem.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class initialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "StaffWorkingHours",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    StaffId = table.Column<Guid>(type: "uuid", nullable: false),
+                    DayOfWeek = table.Column<int>(type: "integer", nullable: false),
+                    StartTime = table.Column<TimeOnly>(type: "time without time zone", nullable: false),
+                    EndTime = table.Column<TimeOnly>(type: "time without time zone", nullable: false),
+                    IsDayOff = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_StaffWorkingHours", x => x.Id);
+                });
+
             migrationBuilder.CreateTable(
                 name: "Tenant",
                 columns: table => new
@@ -33,32 +49,23 @@ namespace BookingSystem.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Customer",
+                name: "TenantWorkingHours",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     TenantId = table.Column<Guid>(type: "uuid", nullable: false),
-                    FirstName = table.Column<string>(type: "text", nullable: false),
-                    LastName = table.Column<string>(type: "text", nullable: false),
-                    Phone = table.Column<string>(type: "text", nullable: false),
-                    Email = table.Column<string>(type: "text", nullable: true),
-                    Notes = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    DayOfWeek = table.Column<int>(type: "integer", nullable: false),
+                    StartTime = table.Column<TimeOnly>(type: "time without time zone", nullable: false),
+                    EndTime = table.Column<TimeOnly>(type: "time without time zone", nullable: false),
+                    IsClosed = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Customer", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Customer_Tenant_BusinessId",
-                        column: x => x.TenantId,
-                        principalTable: "Tenant",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                    table.PrimaryKey("PK_TenantWorkingHours", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Service",
+                name: "Services",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -66,17 +73,17 @@ namespace BookingSystem.Persistence.Migrations
                     Name = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: true),
                     DurationMinutes = table.Column<int>(type: "integer", nullable: false),
-                    Price = table.Column<decimal>(type: "numeric", nullable: false),
-                    Currency = table.Column<string>(type: "text", nullable: false),
+                    Price = table.Column<decimal>(type: "numeric", nullable: true),
+                    Currency = table.Column<string>(type: "text", nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Service", x => x.Id);
+                    table.PrimaryKey("PK_Services", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Service_Tenant_BusinessId",
+                        name: "FK_Services_Tenant_TenantId",
                         column: x => x.TenantId,
                         principalTable: "Tenant",
                         principalColumn: "Id",
@@ -88,13 +95,12 @@ namespace BookingSystem.Persistence.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    TenantId = table.Column<Guid>(type: "uuid", nullable: true),
-                    FirstName = table.Column<string>(type: "text", nullable: false),
-                    LastName = table.Column<string>(type: "text", nullable: false),
+                    Phone = table.Column<string>(type: "text", nullable: false),
                     Email = table.Column<string>(type: "text", nullable: false),
                     PasswordHash = table.Column<string>(type: "text", nullable: false),
                     Role = table.Column<int>(type: "integer", nullable: false),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
+                    TenantId = table.Column<Guid>(type: "uuid", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
@@ -102,10 +108,35 @@ namespace BookingSystem.Persistence.Migrations
                 {
                     table.PrimaryKey("PK_User", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_User_Tenant_BusinessId",
+                        name: "FK_User_Tenant_TenantId",
                         column: x => x.TenantId,
                         principalTable: "Tenant",
                         principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Customers",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    FirstName = table.Column<string>(type: "text", nullable: false),
+                    LastName = table.Column<string>(type: "text", nullable: false),
+                    Phone = table.Column<string>(type: "text", nullable: false),
+                    Email = table.Column<string>(type: "text", nullable: true),
+                    Notes = table.Column<string>(type: "text", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Customers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Customers_User_UserId",
+                        column: x => x.UserId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -127,7 +158,7 @@ namespace BookingSystem.Persistence.Migrations
                 {
                     table.PrimaryKey("PK_Staff", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Staff_Tenant_BusinessId",
+                        name: "FK_Staff_Tenant_TenantId",
                         column: x => x.TenantId,
                         principalTable: "Tenant",
                         principalColumn: "Id",
@@ -137,6 +168,35 @@ namespace BookingSystem.Persistence.Migrations
                         column: x => x.UserId,
                         principalTable: "User",
                         principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CustomerTenants",
+                columns: table => new
+                {
+                    CustomerId = table.Column<Guid>(type: "uuid", nullable: false),
+                    TenantId = table.Column<Guid>(type: "uuid", nullable: false),
+                    FirstVisitAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    LastVisitAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    Notes = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
+                    IsBlocked = table.Column<bool>(type: "boolean", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CustomerTenants", x => new { x.CustomerId, x.TenantId });
+                    table.ForeignKey(
+                        name: "FK_CustomerTenants_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CustomerTenants_Tenant_TenantId",
+                        column: x => x.TenantId,
+                        principalTable: "Tenant",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -159,15 +219,15 @@ namespace BookingSystem.Persistence.Migrations
                 {
                     table.PrimaryKey("PK_Appointments", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Appointments_Customer_CustomerId",
+                        name: "FK_Appointments_Customers_CustomerId",
                         column: x => x.CustomerId,
-                        principalTable: "Customer",
+                        principalTable: "Customers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Appointments_Service_ServiceId",
+                        name: "FK_Appointments_Services_ServiceId",
                         column: x => x.ServiceId,
-                        principalTable: "Service",
+                        principalTable: "Services",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -177,7 +237,7 @@ namespace BookingSystem.Persistence.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Appointments_Tenant_BusinessId",
+                        name: "FK_Appointments_Tenant_TenantId",
                         column: x => x.TenantId,
                         principalTable: "Tenant",
                         principalColumn: "Id",
@@ -185,30 +245,53 @@ namespace BookingSystem.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "BlockedTime",
+                name: "BlockedTimes",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     TenantId = table.Column<Guid>(type: "uuid", nullable: false),
                     StaffId = table.Column<Guid>(type: "uuid", nullable: true),
-                    StartDateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    EndDateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    StartDateTimeUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    EndDateTimeUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     Reason = table.Column<string>(type: "text", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_BlockedTime", x => x.Id);
+                    table.PrimaryKey("PK_BlockedTimes", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_BlockedTime_Staff_StaffId",
+                        name: "FK_BlockedTimes_Staff_StaffId",
                         column: x => x.StaffId,
                         principalTable: "Staff",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_BlockedTime_Tenant_BusinessId",
+                        name: "FK_BlockedTimes_Tenant_TenantId",
                         column: x => x.TenantId,
                         principalTable: "Tenant",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "StaffLunchBreaks",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    TenantId = table.Column<Guid>(type: "uuid", nullable: false),
+                    StaffId = table.Column<Guid>(type: "uuid", nullable: false),
+                    DayOfWeek = table.Column<int>(type: "integer", nullable: false),
+                    StartTime = table.Column<TimeOnly>(type: "time without time zone", nullable: false),
+                    EndTime = table.Column<TimeOnly>(type: "time without time zone", nullable: false),
+                    IsEnabled = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_StaffLunchBreaks", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_StaffLunchBreaks_Staff_StaffId",
+                        column: x => x.StaffId,
+                        principalTable: "Staff",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -224,9 +307,9 @@ namespace BookingSystem.Persistence.Migrations
                 {
                     table.PrimaryKey("PK_StaffServices", x => new { x.StaffId, x.ServiceId });
                     table.ForeignKey(
-                        name: "FK_StaffServices_Service_ServiceId",
+                        name: "FK_StaffServices_Services_ServiceId",
                         column: x => x.ServiceId,
-                        principalTable: "Service",
+                        principalTable: "Services",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -263,11 +346,6 @@ namespace BookingSystem.Persistence.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Appointments_BusinessId_StartDateTime",
-                table: "Appointments",
-                columns: new[] { "TenantId", "StartDateTime" });
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Appointments_CustomerId",
                 table: "Appointments",
                 column: "CustomerId");
@@ -283,19 +361,34 @@ namespace BookingSystem.Persistence.Migrations
                 columns: new[] { "StaffId", "StartDateTime" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_BlockedTime_BusinessId",
-                table: "BlockedTime",
-                column: "TenantId");
+                name: "IX_Appointments_TenantId_StartDateTime",
+                table: "Appointments",
+                columns: new[] { "TenantId", "StartDateTime" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_BlockedTime_StaffId",
-                table: "BlockedTime",
+                name: "IX_BlockedTimes_StaffId",
+                table: "BlockedTimes",
                 column: "StaffId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Customer_BusinessId",
-                table: "Customer",
+                name: "IX_BlockedTimes_TenantId",
+                table: "BlockedTimes",
                 column: "TenantId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Customers_UserId",
+                table: "Customers",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CustomerTenants_TenantId_IsBlocked",
+                table: "CustomerTenants",
+                columns: new[] { "TenantId", "IsBlocked" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CustomerTenants_TenantId_LastVisitAt",
+                table: "CustomerTenants",
+                columns: new[] { "TenantId", "LastVisitAt" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Payment_AppointmentId",
@@ -303,12 +396,12 @@ namespace BookingSystem.Persistence.Migrations
                 column: "AppointmentId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Service_BusinessId",
-                table: "Service",
+                name: "IX_Services_TenantId",
+                table: "Services",
                 column: "TenantId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Staff_BusinessId",
+                name: "IX_Staff_TenantId",
                 table: "Staff",
                 column: "TenantId");
 
@@ -318,9 +411,26 @@ namespace BookingSystem.Persistence.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_StaffLunchBreaks_StaffId_DayOfWeek",
+                table: "StaffLunchBreaks",
+                columns: new[] { "StaffId", "DayOfWeek" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StaffLunchBreaks_TenantId",
+                table: "StaffLunchBreaks",
+                column: "TenantId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_StaffServices_ServiceId",
                 table: "StaffServices",
                 column: "ServiceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StaffWorkingHours_StaffId_DayOfWeek",
+                table: "StaffWorkingHours",
+                columns: new[] { "StaffId", "DayOfWeek" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Tenant_Slug",
@@ -329,7 +439,7 @@ namespace BookingSystem.Persistence.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_User_BusinessId",
+                name: "IX_User_TenantId",
                 table: "User",
                 column: "TenantId");
         }
@@ -338,22 +448,34 @@ namespace BookingSystem.Persistence.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "BlockedTime");
+                name: "BlockedTimes");
+
+            migrationBuilder.DropTable(
+                name: "CustomerTenants");
 
             migrationBuilder.DropTable(
                 name: "Payment");
 
             migrationBuilder.DropTable(
+                name: "StaffLunchBreaks");
+
+            migrationBuilder.DropTable(
                 name: "StaffServices");
+
+            migrationBuilder.DropTable(
+                name: "StaffWorkingHours");
+
+            migrationBuilder.DropTable(
+                name: "TenantWorkingHours");
 
             migrationBuilder.DropTable(
                 name: "Appointments");
 
             migrationBuilder.DropTable(
-                name: "Customer");
+                name: "Customers");
 
             migrationBuilder.DropTable(
-                name: "Service");
+                name: "Services");
 
             migrationBuilder.DropTable(
                 name: "Staff");
